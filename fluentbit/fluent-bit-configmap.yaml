@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-bit-config
+  namespace: kube-system
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+        flush        1
+        daemon       Off
+        log_level    info
+        parsers_file parsers.conf
+ 
+    @INCLUDE input-kubernetes.conf
+    @INCLUDE filter-kubernetes.conf
+    @INCLUDE output.conf
+ 
+  input-kubernetes.conf: |
+    [INPUT]
+        Name              tail
+        Path              /var/log/containers/*.log
+        Parser            docker
+        Tag               kube.*
+ 
+  filter-kubernetes.conf: |
+    [FILTER]
+        Name                kubernetes
+        Match               kube.*
+        Merge_Log           On
+        K8S-Logging.Parser  On
+        K8S-Logging.Exclude Off
+ 
+    [FILTER]
+        Name    lua
+        Match   kube.*
+        script  /fluent-bit/scripts/color_map.lua
+        call    color_map
+ 
+  output.conf: |
+    [OUTPUT]
+        Name  forward
+        Match *
+        Host  logs-collector
+        Port  24224
+ 
