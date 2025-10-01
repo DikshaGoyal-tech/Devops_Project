@@ -1,0 +1,17 @@
+groups:
+- name: node-app.rules
+  rules:
+  - alert: HighErrorRate
+    expr: |
+      sum(rate(http_requests_total{job="node-app",status=~"5.."}[5m])) by (instance)
+      /
+      sum(rate(http_requests_total{job="node-app"}[5m])) by (instance)
+      > 0.05
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "High HTTP 5xx rate on node-app"
+      description: "More than 5% of requests are failing with 5xx for 5m."
+ 
+ 
