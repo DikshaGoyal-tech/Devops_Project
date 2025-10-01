@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: node-app-rollout
+  namespace: production
+spec:
+  replicas: 3
+  strategy:
+    canary:
+      steps:
+      - setWeight: 10
+      - pause: {duration: 3m}
+      - setWeight: 50
+      - pause: {duration: 5m}
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+    spec:
+      containers:
+      - name: node-app
+        image: ghcr.io/myorg/my-node-app:{{version}}
+        ports:
+          - containerPort: 3000
+ 
